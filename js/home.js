@@ -7,6 +7,7 @@
 
   /* ---- DATA ---------------------------------------------------------------- */
   const A = 'assets/photos/';
+  const SPECS = 'assets/specs/';
   const PHOTOS = {
     hero: A + 'tower-crane.jpg',
     sunrise: A + 'sunrise-aerial.jpg',
@@ -21,48 +22,78 @@
     harborBridge: A + 'harbor-bridge.png',
   };
 
-  // Build a plausible decreasing load-vs-radius capacity curve.
-  function curve(maxLoad, maxRadius, tipLoad) {
-    const pts = [];
-    const steps = 7;
-    for (let i = 0; i <= steps; i++) {
-      const r = Math.round((maxRadius / steps) * i);
-      const t = i / steps;
-      const load = +(maxLoad * Math.pow(tipLoad / maxLoad, t)).toFixed(1);
-      pts.push({ r: Math.max(r, 2.5), load });
+  // Geometry of a tower crane's working range, in feet:
+  //  - minRadius: closest the hook can work to the mast. Trolley cranes (flat-top /
+  //    city) run the load in/out on a near-horizontal jib, so they reach a small
+  //    fixed minimum (~10 ft). Luffing jibs pivot up to a steep max angle (~83°),
+  //    so their minimum radius grows with jib length — they physically CANNOT make
+  //    a short-radius pick the way a flat-top can.
+  //  - plateau: out to this radius the crane holds its full rated capacity; past it
+  //    the structural load-moment limit takes over and capacity tapers to tip load.
+  function geometry(m) {
+    const minRadius = m.cat === 'Luffing' ? Math.round(m.maxJib * 0.122 + 6) : 10;
+    const K = m.tipLoad * m.maxJib;                 // load-moment limit (lb·ft)
+    const plateau = Math.min(m.maxJib, Math.max(minRadius, Math.round(K / m.maxCap)));
+    return { minRadius, plateau, K };
+  }
+
+  // Sample the capacity curve (lb vs ft): flat at maxCap from minRadius to plateau,
+  // then a constant-moment taper (load = K / radius) out to the jib tip.
+  function curve(minRadius, plateau, maxJib, maxCap, K) {
+    const pts = [{ r: minRadius, load: maxCap }];
+    if (plateau > minRadius) pts.push({ r: plateau, load: maxCap });
+    const steps = 5;
+    for (let i = 1; i <= steps; i++) {
+      const r = Math.round(plateau + (maxJib - plateau) * (i / steps));
+      pts.push({ r, load: Math.round(K / r) });
     }
     return pts;
   }
 
+  // Specs are taken from the official Linden Comansa data sheets (imperial: lb / ft).
+  // freeHeight = max free-standing (autostable) under-hook height per Comansa; the
+  // LC2100 flat-tops reach 328 ft (100 m) on standard towers and the 21 LC 750 works
+  // to ~266 ft free-standing. City/luffing figures are Comansa standard-tower values.
   const FLEET = [
-    { id: 'lc290', series: '300', cat: 'Flat-Top', name: 'LC 290', maxCap: 18, maxJib: 71.5, tipLoad: 2.0, freeHeight: 51.7, status: 'in-service',
-      blurb: 'Compact flat-top for tight urban infill and mid-rise concrete.' },
-    { id: 'lc335', series: '300', cat: 'Flat-Top', name: 'LC 335', maxCap: 24, maxJib: 75, tipLoad: 2.4, freeHeight: 54.3, status: 'in-service',
-      blurb: 'Workhorse of the 300 line — versatile reach for commercial builds.' },
-    { id: 'lc400', series: '400', cat: 'Flat-Top', name: 'LC 400', maxCap: 24, maxJib: 80, tipLoad: 3.0, freeHeight: 60.1, status: 'reserved',
-      blurb: 'Long-jib flat-top with strong tip loads for sprawling footprints.' },
-    { id: 'lc450', series: '400', cat: 'Flat-Top', name: 'LC 450', maxCap: 32, maxJib: 80, tipLoad: 3.6, freeHeight: 61.4, status: 'in-service',
-      blurb: 'Heavier picks without sacrificing the 400-series reach.' },
-    { id: 'lc550', series: '500', cat: 'Flat-Top', name: 'LC 550', maxCap: 64, maxJib: 80, tipLoad: 12.5, freeHeight: 65.0, status: 'in-service',
-      blurb: 'High-capacity flat-top for heavy precast and structural steel.' },
-    { id: 'lc750', series: '700', cat: 'Flat-Top', name: 'LC 750', maxCap: 64, maxJib: 85, tipLoad: 13.2, freeHeight: 69.2, status: 'in-transit',
-      blurb: 'Top of the range — maximum capacity for the most demanding lifts.' },
-    { id: 'lc140', series: 'City', cat: 'City', name: 'LC 140', maxCap: 8, maxJib: 50, tipLoad: 1.3, freeHeight: 33.4, status: 'in-service',
-      blurb: 'Quick-erect city crane for low-rise and renovation jobsites.' },
-    { id: 'lc1060', series: 'City', cat: 'City', name: 'LC 1060', maxCap: 10, maxJib: 55, tipLoad: 1.6, freeHeight: 40.8, status: 'in-service',
-      blurb: 'Fast assembly, small footprint, ideal for downtown lots.' },
-    { id: 'lcl310', series: 'Luffing', cat: 'Luffing', name: 'LCL 310', maxCap: 18, maxJib: 55, tipLoad: 3.1, freeHeight: 48.0, status: 'reserved',
-      blurb: 'Luffing jib for restricted airspace and over-sailing constraints.' },
-    { id: 'lcl700', series: 'Luffing', cat: 'Luffing', name: 'LCL 700', maxCap: 48, maxJib: 60, tipLoad: 7.0, freeHeight: 55.5, status: 'in-service',
-      blurb: 'Heavy luffer for dense city centers with tight slew radii.' },
-  ].map(m => ({
-    ...m,
-    curve: curve(m.maxCap, m.maxJib, m.tipLoad),
-    photo: ({ lc290: 'lc750', lc335: 'toronto', lc400: 'lc750', lc450: 'toronto', lc550: 'hero', lc750: 'lc750',
-      lc140: 'cityCrane', lc1060: 'cityCrane', lcl310: 'luffing', lcl700: 'luffing' })[m.id],
-  }));
+    { id: 'lc290', series: 'LC 2100', cat: 'Flat-Top', name: 'LC 290', maxCap: 39670, maxJib: 242.7, tipLoad: 5950, freeHeight: 197, status: 'in-service',
+      blurb: 'Compact flat-top for tight urban infill and mid-rise concrete.', pdf: '21-LC-290-Data-Sheet.pdf' },
+    { id: 'lc335', series: 'LC 2100', cat: 'Flat-Top', name: 'LC 335', maxCap: 44090, maxJib: 242.8, tipLoad: 5950, freeHeight: 197, status: 'in-service',
+      blurb: 'Workhorse of the LC2100 line — versatile reach for commercial builds.', pdf: '21-LC-335-Data-Sheet.pdf' },
+    { id: 'lc400', series: 'LC 2100', cat: 'Flat-Top', name: 'LC 400', maxCap: 39670, maxJib: 262.4, tipLoad: 6610, freeHeight: 203, status: 'reserved',
+      blurb: 'Long-jib flat-top with strong tip loads for sprawling footprints.', pdf: '21-LC-400-Data-Sheet.pdf' },
+    { id: 'lc450', series: 'LC 2100', cat: 'Flat-Top', name: 'LC 450', maxCap: 44090, maxJib: 262.5, tipLoad: 6610, freeHeight: 210, status: 'in-service',
+      blurb: 'Heavier picks without sacrificing the long LC2100 reach.', pdf: '21-LC-450-Data-Sheet.pdf' },
+    { id: 'lc550', series: 'LC 2100', cat: 'Flat-Top', name: 'LC 550', maxCap: 39670, maxJib: 262.4, tipLoad: 8820, freeHeight: 213, status: 'in-service',
+      blurb: 'High tip loads at full reach for heavy precast and structural steel.', pdf: '21-LC-550-Data-Sheet.pdf' },
+    { id: 'lc750', series: 'LC 2100', cat: 'Flat-Top', name: 'LC 750', maxCap: 82670, maxJib: 262.5, tipLoad: 16090, freeHeight: 266, status: 'in-transit',
+      blurb: 'Top of the range — maximum capacity for the most demanding lifts.', pdf: '21-LC-750-Data-Sheet.pdf' },
+    { id: 'lc140', series: 'LINDEN 1000', cat: 'City', name: 'LC 140', maxCap: 17630, maxJib: 196.8, tipLoad: 4410, freeHeight: 164, status: 'in-service',
+      blurb: 'Quick-erect city crane for low-rise and renovation jobsites.', pdf: '10-LC-140-Data-Sheet.pdf' },
+    { id: 'lc160', series: 'LC 1100', cat: 'City', name: 'LC 160', maxCap: 17640, maxJib: 213.3, tipLoad: 3090, freeHeight: 167, status: 'in-service',
+      blurb: 'Long-reach city crane with strong mid-radius capacity.', pdf: '11-LC-160-Data-Sheet.pdf' },
+    { id: 'lc1060', series: 'LINDEN 1000', cat: 'City', name: 'LC 1060', maxCap: 17630, maxJib: 196.8, tipLoad: 3305, freeHeight: 164, status: 'in-service',
+      blurb: 'Fast assembly, small footprint, ideal for downtown lots.', pdf: 'LC-1060-Data-Sheet.pdf' },
+    { id: 'lc5211', series: 'LC 5000', cat: 'City', name: 'LC 5211', maxCap: 11020, maxJib: 172.2, tipLoad: 2420, freeHeight: 148, status: 'reserved',
+      blurb: 'Light, nimble flat-top for confined sites and short-duration picks.', pdf: 'LC-5211-Data-Sheet.pdf' },
+    { id: 'lcl310', series: 'LCL', cat: 'Luffing', name: 'LCL 310', maxCap: 52910, maxJib: 196.9, tipLoad: 7050, freeHeight: 180, status: 'reserved',
+      blurb: 'Luffing jib for restricted airspace and over-sailing constraints.', pdf: 'LCL-310-Data-Sheet.pdf' },
+    { id: 'lcl500', series: 'LCL', cat: 'Luffing', name: 'LCL 500', maxCap: 52910, maxJib: 213.3, tipLoad: 10360, freeHeight: 190, status: 'in-service',
+      blurb: 'Longer luffing reach for dense skylines with tight slew radii.', pdf: 'LCL-500-Data-Sheet.pdf' },
+    { id: 'lcl700', series: 'LCL', cat: 'Luffing', name: 'LCL 700', maxCap: 141090, maxJib: 213.3, tipLoad: 15870, freeHeight: 197, status: 'in-service',
+      blurb: 'Heavy luffer for the most demanding picks in congested city centers.', pdf: 'LCL-700-Data-Sheet.pdf' },
+  ].map(m => {
+    const g = geometry(m);
+    return {
+      ...m, ...g,
+      curve: curve(g.minRadius, g.plateau, m.maxJib, m.maxCap, g.K),
+      photo: ({ lc290: 'lc750', lc335: 'toronto', lc400: 'lc750', lc450: 'toronto', lc550: 'hero', lc750: 'lc750',
+        lc140: 'cityCrane', lc160: 'cityCrane', lc1060: 'cityCrane', lc5211: 'cityCrane',
+        lcl310: 'luffing', lcl500: 'luffing', lcl700: 'luffing' })[m.id],
+    };
+  });
 
-  const SERIES = ['All', '300', '400', '500', '700', 'City', 'Luffing'];
+  const SERIES = ['All', 'Flat-Top', 'City', 'Luffing'];
+  const fmt = n => Math.round(n).toLocaleString('en-US');
 
   const STATUS = {
     'in-service': { label: 'In Service', color: '#2E9E5B' },
@@ -113,19 +144,13 @@
     { v: '2', suffix: '', k: 'Regional Divisions' },
   ];
 
-  // Linear-interpolate a model's safe load (t) at a working radius (m).
+  // A model's safe load (lb) at a working radius (ft). Returns 0 when the radius is
+  // outside the crane's geometry — below its minimum working radius (jib angle too
+  // steep) or past the jib tip.
   function capAtRadius(model, r) {
-    const c = model.curve;
-    if (r > model.maxJib) return 0;
-    if (r <= c[0].r) return c[0].load;
-    for (let i = 1; i < c.length; i++) {
-      if (r <= c[i].r) {
-        const a = c[i - 1], b = c[i];
-        const t = (r - a.r) / (b.r - a.r);
-        return a.load + t * (b.load - a.load);
-      }
-    }
-    return c[c.length - 1].load;
+    if (r < model.minRadius || r > model.maxJib) return 0;
+    if (r <= model.plateau) return model.maxCap;
+    return model.K / r;
   }
 
   /* ---- helpers ------------------------------------------------------------- */
@@ -166,7 +191,7 @@
         <div class="hd-crane__series">${m.series} Series</div>
         <div class="hd-crane__name">${m.name}</div>
         <div class="hd-crane__specs">
-          ${spec('Max Cap', m.maxCap, 't')}${spec('Jib', m.maxJib, 'm')}${spec('Tip', m.tipLoad, 't')}
+          ${spec('Max Cap', fmt(m.maxCap), 'lb')}${spec('Jib', m.maxJib, 'ft')}${spec('Tip', fmt(m.tipLoad), 'lb')}
         </div>
       </div>
     </button>`;
@@ -176,12 +201,12 @@
       `<button class="hd-fleet__filter${s === fleetFilter ? ' is-active' : ''}" data-filter="${s}">${s}</button>`).join('');
   }
   function renderFleetGrid() {
-    const shown = fleetFilter === 'All' ? FLEET : FLEET.filter(m => m.series === fleetFilter);
+    const shown = fleetFilter === 'All' ? FLEET : FLEET.filter(m => m.cat === fleetFilter);
     $('[data-fleet-grid]').innerHTML = shown.map(craneCard).join('');
   }
 
   /* ---- lift planner -------------------------------------------------------- */
-  const lp = { load: 12, radius: 45, height: 40 };
+  const lp = { load: 20000, radius: 150, height: 130 };
   let currentBest = null;
   let currentLiftSummary = '';
 
@@ -199,16 +224,18 @@
     const best = matches[0] || null;
     const maxCapInView = Math.max(lp.load, ...ranked.map(r => r.cap), 1);
     currentBest = best;
-    currentLiftSummary = `Lift plan — ${lp.load.toFixed(1)} t at ${lp.radius} m radius, ${lp.height} m under-hook height.` +
+    currentLiftSummary = `Lift plan — ${fmt(lp.load)} lb at ${lp.radius} ft radius, ${lp.height} ft under-hook height.` +
       (best ? ` Recommended crane: ${best.m.name}.` : '');
 
     $('[data-lp-rows]').innerHTML = ranked.map(({ m, cap, ok, tieIns }) => {
       const pct = Math.min(100, (cap / maxCapInView) * 100);
       const reqPct = Math.min(100, (lp.load / maxCapInView) * 100);
       const outOfReach = lp.radius > m.maxJib;
-      const col = outOfReach ? 'var(--fg-on-dark-subtle)'
+      const tooClose = lp.radius < m.minRadius;
+      const col = (outOfReach || tooClose) ? 'var(--fg-on-dark-subtle)'
         : ok ? (tieIns ? 'var(--amber)' : 'var(--signal-go)') : 'var(--fg-on-dark-subtle)';
-      const txt = outOfReach ? 'out of reach' : ok ? (tieIns ? '✓ lift · tie-ins' : '✓ can lift') : 'over capacity';
+      const txt = outOfReach ? 'out of reach' : tooClose ? 'below min radius'
+        : ok ? (tieIns ? '✓ lift · tie-ins' : '✓ can lift') : 'over capacity';
       return `<button class="hd-planner__row${ok ? ' ok' : ''}${best && best.m.id === m.id ? ' best' : ''}" data-crane="${m.id}">
         <div>
           <div class="hd-planner__row-name">${m.name}</div>
@@ -219,7 +246,7 @@
           <div class="hd-planner__bar-marker" style="left:${reqPct}%" title="Required load"></div>
         </div>
         <div class="hd-planner__cap">
-          <div class="hd-planner__cap-n${ok ? '' : ' miss'}">${cap > 0 ? cap.toFixed(1) : '—'}${cap > 0 ? '<span class="u"> t</span>' : ''}</div>
+          <div class="hd-planner__cap-n${ok ? '' : ' miss'}">${cap > 0 ? fmt(cap) : '—'}${cap > 0 ? '<span class="u"> lb</span>' : ''}</div>
           <div class="hd-planner__cap-status" style="color:${col}">${txt}</div>
         </div>
       </button>`;
@@ -229,8 +256,8 @@
       <div class="hd-planner__result-label">Result</div>
       <div class="hd-planner__count"><span class="n${matches.length ? '' : ' none'}">${matches.length}</span> of ${FLEET.length}</div>
       <div class="hd-planner__msg">${matches.length
-        ? `cranes can place <b>${lp.load.toFixed(1)} t</b> at <b>${lp.radius} m</b>.`
-        : `No single crane covers <b>${lp.load.toFixed(1)} t</b> at <b>${lp.radius} m</b> — talk to an estimator about a larger model or tandem lift.`}</div>
+        ? `cranes can place <b>${fmt(lp.load)} lb</b> at <b>${lp.radius} ft</b>.`
+        : `No single crane covers <b>${fmt(lp.load)} lb</b> at <b>${lp.radius} ft</b> — talk to an estimator about a larger model or tandem lift.`}</div>
       ${best ? `<button class="hd-planner__rec" data-crane="${best.m.id}">
         <span><span class="hd-planner__rec-k">Recommended · right-sized</span><span class="hd-planner__rec-name">${best.m.name}</span></span>
         <span class="hd-icon" data-lucide="arrow-right" style="width:20px;height:20px"></span></button>` : ''}
@@ -308,8 +335,9 @@
   const quoteOverlay = $('[data-quote-overlay]');
 
   function chartSvg(data, maxJib, maxCap) {
-    const W = 560, H = 240, padL = 46, padR = 16, padT = 16, padB = 38;
-    const xmax = maxJib, ymax = Math.ceil(maxCap / 8) * 8;
+    const W = 560, H = 240, padL = 64, padR = 16, padT = 16, padB = 38;
+    const yStep = maxCap > 50000 ? 20000 : maxCap > 20000 ? 10000 : 5000;
+    const xmax = maxJib, ymax = Math.ceil(maxCap / yStep) * yStep;
     const x = r => padL + (r / xmax) * (W - padL - padR);
     const y = v => H - padB - (v / ymax) * (H - padT - padB);
     const pts = data.map(d => [x(d.r), y(d.load)]);
@@ -323,19 +351,19 @@
         <stop offset="0%" stop-color="#F2B705" stop-opacity=".32"/>
         <stop offset="100%" stop-color="#F2B705" stop-opacity="0"/></linearGradient></defs>
       ${yticks.map((t, i) => `<line x1="${padL}" x2="${W - padR}" y1="${y(t)}" y2="${y(t)}" stroke="rgba(255,255,255,.12)" stroke-width="1"${i ? ' stroke-dasharray="2 4"' : ''}/>
-        <text x="${padL - 8}" y="${y(t) + 4}" text-anchor="end" fill="#AEB6C8" style="font:${mono}">${t}</text>`).join('')}
+        <text x="${padL - 8}" y="${y(t) + 4}" text-anchor="end" fill="#AEB6C8" style="font:${mono}">${fmt(t)}</text>`).join('')}
       ${xticks.map(d => `<text x="${x(d.r)}" y="${H - padB + 18}" text-anchor="middle" fill="#AEB6C8" style="font:${mono}">${d.r}</text>`).join('')}
       <path d="${area}" fill="url(#capfill)"/>
       <path d="${line}" fill="none" stroke="#F2B705" stroke-width="2.5" stroke-linejoin="round"/>
       ${pts.map(p => `<circle cx="${p[0]}" cy="${p[1]}" r="3.5" fill="#09163A" stroke="#F2B705" stroke-width="2"/>`).join('')}
-      <text x="${W - padR}" y="${H - 6}" text-anchor="end" fill="#7E8696" style="font:500 10px 'IBM Plex Mono',monospace;letter-spacing:.1em">RADIUS (m) →</text>
-      <text x="${padL - 38}" y="${padT + 6}" fill="#7E8696" style="font:500 10px 'IBM Plex Mono',monospace;letter-spacing:.1em">↑ LOAD (t)</text>
+      <text x="${W - padR}" y="${H - 6}" text-anchor="end" fill="#7E8696" style="font:500 10px 'IBM Plex Mono',monospace;letter-spacing:.1em">RADIUS (ft) →</text>
+      <text transform="translate(13 ${(padT + H - padB) / 2}) rotate(-90)" text-anchor="middle" fill="#7E8696" style="font:500 10px 'IBM Plex Mono',monospace;letter-spacing:.1em">LOAD (lb) →</text>
     </svg>`;
   }
 
   function detailHtml(m) {
-    const rows = [['Series', m.series + ' Series'], ['Configuration', m.cat], ['Max Capacity', m.maxCap + ' t'],
-      ['Max Jib Length', m.maxJib + ' m'], ['Tip Load', m.tipLoad + ' t'], ['Max Free-Standing Height', m.freeHeight + ' m']];
+    const rows = [['Series', m.series + ' Series'], ['Configuration', m.cat], ['Max Capacity', fmt(m.maxCap) + ' lb'],
+      ['Max Jib Length', m.maxJib + ' ft'], ['Tip Load', fmt(m.tipLoad) + ' lb'], ['Max Free-Standing Height', m.freeHeight + ' ft']];
     return `<div class="hd-detail">
       <div class="hd-hazard"></div>
       <div class="hd-detail__grid">
@@ -359,7 +387,7 @@
           <p class="hd-detail__chartnote">Illustrative curve. Refer to the official Comansa data sheet for certified lift values.</p>
           <div class="hd-detail__actions">
             <button class="hd-btn hd-btn--primary" style="flex:1;justify-content:center" data-quote-crane="${m.id}">Quote This Crane <span class="hd-icon" data-lucide="arrow-right"></span></button>
-            <button class="hd-btn hd-btn--outline-light" style="padding:14px 16px"><span class="hd-icon" data-lucide="download"></span> Spec Sheet</button>
+            <a class="hd-btn hd-btn--outline-light" style="padding:14px 16px" href="${SPECS}${m.pdf}" target="_blank" rel="noopener"><span class="hd-icon" data-lucide="download"></span> Spec Sheet</a>
           </div>
         </div>
       </div>
@@ -481,7 +509,7 @@
 
     // sliders
     const loadEl = $('[data-lp-load]'), radEl = $('[data-lp-radius]'), htEl = $('[data-lp-height]');
-    loadEl.addEventListener('input', e => { lp.load = parseFloat(e.target.value); $('[data-lp-load-v]').textContent = lp.load.toFixed(1); renderPlanner(); });
+    loadEl.addEventListener('input', e => { lp.load = parseInt(e.target.value, 10); $('[data-lp-load-v]').textContent = fmt(lp.load); renderPlanner(); });
     radEl.addEventListener('input', e => { lp.radius = parseInt(e.target.value, 10); $('[data-lp-radius-v]').textContent = lp.radius; renderPlanner(); });
     htEl.addEventListener('input', e => { lp.height = parseInt(e.target.value, 10); $('[data-lp-height-v]').textContent = lp.height; renderPlanner(); });
 
