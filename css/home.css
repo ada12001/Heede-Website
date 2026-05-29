@@ -154,7 +154,7 @@ select:focus-visible, textarea:focus-visible {
    are pulled up into place (timed to start as the hook reaches them). */
 .hd-rig {
   position: relative; margin: 0; max-width: max-content;
-  transform-origin: top center; animation: hdRig .9s var(--ease-out) 1.95s both;
+  transform-origin: top center; animation: hdRig .85s var(--ease-out) 1.9s both;
 }
 .hd-rig .hd-eyebrow { display: inline-flex; margin: 0 0 18px; }
 @keyframes hdRig {
@@ -201,18 +201,21 @@ select:focus-visible, textarea:focus-visible {
   100% { transform: translateX(0); }
 }
 /* cable extends down past the text (grab), retracts up to latch on the first
-   line (rest) lifting it, then retracts a touch more to dangle above it */
+   line (rest) lifting it, then retracts a touch more to dangle above it.
+   Per-keyframe easing keeps it fluid: the descent settles into the dip, then
+   the lift is one continuous accelerate-decelerate swoop through the latch
+   (peak speed at the latch — no pause), easing only at the natural endpoints. */
 @keyframes hdDrop {
-  0%   { transform: scaleY(var(--f-start)); }
-  35%  { transform: scaleY(var(--f-grab)); }
-  70%  { transform: scaleY(var(--f-rest)); }
+  0%   { transform: scaleY(var(--f-start)); animation-timing-function: cubic-bezier(.4,0,.6,1); }
+  35%  { transform: scaleY(var(--f-grab));  animation-timing-function: cubic-bezier(.4,0,1,1); }
+  70%  { transform: scaleY(var(--f-rest));  animation-timing-function: cubic-bezier(0,0,.6,1); }
   100% { transform: scaleY(var(--f-above)); }
 }
 /* hook rides the bottom of the cable (values kept proportional to the cable) */
 @keyframes hdDropHook {
-  0%   { transform: translateY(var(--h-start)); }
-  35%  { transform: translateY(var(--h-grab)); }
-  70%  { transform: translateY(var(--h-rest)); }
+  0%   { transform: translateY(var(--h-start)); animation-timing-function: cubic-bezier(.4,0,.6,1); }
+  35%  { transform: translateY(var(--h-grab));  animation-timing-function: cubic-bezier(.4,0,1,1); }
+  70%  { transform: translateY(var(--h-rest));  animation-timing-function: cubic-bezier(0,0,.6,1); }
   100% { transform: translateY(var(--h-above)); }
 }
 @keyframes hdCableSwing {
