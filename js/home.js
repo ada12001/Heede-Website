@@ -571,7 +571,10 @@
   // 108 + 318*f and the hook rides with it via translateY = 318*(f-1).  We
   // solve f so the cable end lands on the headline's first line ("The sky is")
   // at any viewport size, and feed the keyframe values in as custom properties.
-  const CABLE_ORIGIN = 108, CABLE_LEN = 318, TEXT_RISE_PX = 118;
+  // HOOK_DANGLE_VB lifts the cable end this many viewBox units above the first
+  // line for the final resting pose — clears the hook's own height (~44vb) plus
+  // a small gap so it dangles just above the text rather than over it.
+  const CABLE_ORIGIN = 108, CABLE_LEN = 318, TEXT_RISE_PX = 118, HOOK_DANGLE_VB = 56;
   function tuneHeroHook() {
     const svg = $('.hd-hoist');
     const cable = $('.hd-hoist__cable');
@@ -597,6 +600,8 @@
     // grab dips one text-rise (118 screen px) lower, so hook + text lift together
     const fGrab = (restEndVb + TEXT_RISE_PX / scale - CABLE_ORIGIN) / CABLE_LEN;
     const fStart = Math.min(fRest, 0.35);         // start retracted high
+    // after the lift, retract a touch more so the hook dangles above the text
+    const fAbove = (restEndVb - HOOK_DANGLE_VB - CABLE_ORIGIN) / CABLE_LEN;
 
     // Set on the cable/hook elements themselves: each declares its own custom
     // -property fallbacks, which would shadow values inherited from .hd-hoist.
@@ -604,9 +609,11 @@
     cable.style.setProperty('--f-start', fStart.toFixed(3));
     cable.style.setProperty('--f-grab', fGrab.toFixed(3));
     cable.style.setProperty('--f-rest', fRest.toFixed(3));
+    cable.style.setProperty('--f-above', fAbove.toFixed(3));
     hook.style.setProperty('--h-start', hookY(fStart));
     hook.style.setProperty('--h-grab', hookY(fGrab));
     hook.style.setProperty('--h-rest', hookY(fRest));
+    hook.style.setProperty('--h-above', hookY(fAbove));
   }
   let hookTuneRaf = 0;
   function scheduleHookTune() {
