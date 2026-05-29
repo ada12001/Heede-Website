@@ -180,9 +180,15 @@ select:focus-visible, textarea:focus-visible {
 .hd-hoist__carriage { animation: hdRoll 1s var(--ease-out) .3s both; }
 .hd-hoist__cable {
   transform-box: view-box; transform-origin: 523px 108px;
+  /* drop factors are set responsively by JS (js/home.js) so the hook always
+     reaches the headline first line; fallbacks match the unscaled defaults. */
+  --f-start: .35; --f-grab: 1.2; --f-rest: 1;
   animation: hdDrop 1.4s ease-in-out 1.2s both;
 }
-.hd-hoist__hook { animation: hdDropHook 1.4s ease-in-out 1.2s both; }
+.hd-hoist__hook {
+  --h-start: -207px; --h-grab: 64px; --h-rest: 0px;
+  animation: hdDropHook 1.4s ease-in-out 1.2s both;
+}
 .hd-hoist__swing {
   transform-box: view-box; transform-origin: 523px 104px;
   animation: hdCableSwing 6s ease-in-out 2.75s infinite;
@@ -194,15 +200,15 @@ select:focus-visible, textarea:focus-visible {
 }
 /* cable extends down to the text (grab), then retracts up to rest, lifting it */
 @keyframes hdDrop {
-  0%   { transform: scaleY(.35); }
-  50%  { transform: scaleY(1.2); }
-  100% { transform: scaleY(1); }
+  0%   { transform: scaleY(var(--f-start)); }
+  50%  { transform: scaleY(var(--f-grab)); }
+  100% { transform: scaleY(var(--f-rest)); }
 }
 /* hook rides the bottom of the cable (values kept proportional to the cable) */
 @keyframes hdDropHook {
-  0%   { transform: translateY(-207px); }
-  50%  { transform: translateY(64px); }
-  100% { transform: translateY(0); }
+  0%   { transform: translateY(var(--h-start)); }
+  50%  { transform: translateY(var(--h-grab)); }
+  100% { transform: translateY(var(--h-rest)); }
 }
 @keyframes hdCableSwing {
   0%   { transform: rotate(0deg); }

@@ -565,6 +565,56 @@
     });
   }
 
+  /* ---- responsive hero hook drop ------------------------------------------ */
+  // The crane hook lowers on a cable of fixed SVG geometry (origin y=108,
+  // length 318 viewBox units).  At a vertical scale f the cable end sits at
+  // 108 + 318*f and the hook rides with it via translateY = 318*(f-1).  We
+  // solve f so the cable end lands on the headline's first line ("The sky is")
+  // at any viewport size, and feed the keyframe values in as custom properties.
+  const CABLE_ORIGIN = 108, CABLE_LEN = 318, TEXT_RISE_PX = 118;
+  function tuneHeroHook() {
+    const svg = $('.hd-hoist');
+    const cable = $('.hd-hoist__cable');
+    const hook = $('.hd-hoist__hook');
+    const title = $('.hd-hero__title');
+    if (!svg || !cable || !hook || !title) return;
+    if (getComputedStyle(svg).display === 'none') return; // hidden on mobile
+
+    const svgRect = svg.getBoundingClientRect();
+    if (!svgRect.width) return;
+    const scale = svgRect.width / 920;            // viewBox unit -> screen px
+
+    // headline first-line top in screen px, with any in-flight rig transform removed
+    const rig = title.closest('.hd-rig');
+    const tr = rig ? getComputedStyle(rig).transform : 'none';
+    let ty = 0;
+    if (tr && tr !== 'none') { try { ty = new DOMMatrixReadOnly(tr).m42; } catch (_) {} }
+    const titleTop = title.getBoundingClientRect().top - ty;
+
+    // viewBox y where the cable should end at rest (latched on the first line)
+    const restEndVb = (titleTop - svgRect.top) / scale;
+    const fRest = (restEndVb - CABLE_ORIGIN) / CABLE_LEN;
+    // grab dips one text-rise (118 screen px) lower, so hook + text lift together
+    const fGrab = (restEndVb + TEXT_RISE_PX / scale - CABLE_ORIGIN) / CABLE_LEN;
+    const fStart = Math.min(fRest, 0.35);         // start retracted high
+
+    // Set on the cable/hook elements themselves: each declares its own custom
+    // -property fallbacks, which would shadow values inherited from .hd-hoist.
+    const hookY = f => (CABLE_LEN * (f - 1)).toFixed(1) + 'px';
+    cable.style.setProperty('--f-start', fStart.toFixed(3));
+    cable.style.setProperty('--f-grab', fGrab.toFixed(3));
+    cable.style.setProperty('--f-rest', fRest.toFixed(3));
+    hook.style.setProperty('--h-start', hookY(fStart));
+    hook.style.setProperty('--h-grab', hookY(fGrab));
+    hook.style.setProperty('--h-rest', hookY(fRest));
+  }
+  let hookTuneRaf = 0;
+  function scheduleHookTune() {
+    cancelAnimationFrame(hookTuneRaf);
+    hookTuneRaf = requestAnimationFrame(tuneHeroHook);
+  }
+  window.addEventListener('resize', scheduleHookTune);
+
   /* ---- init ---------------------------------------------------------------- */
   renderFleetFilters();
   renderFleetGrid();
@@ -577,4 +627,8 @@
   if (yearEl) yearEl.textContent = new Date().getFullYear();
   wire();
   icons();
+  tuneHeroHook();
+  // re-measure once fonts/layout settle, so the rest factor is exact before the drop
+  window.addEventListener('load', scheduleHookTune);
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(scheduleHookTune);
 })();
