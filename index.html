@@ -72,15 +72,22 @@
           <line x1="150" y1="6" x2="475" y2="70" stroke-width="1.6" />
           <line x1="150" y1="6" x2="740" y2="70" stroke-width="1.6" />
           <line x1="150" y1="6" x2="0" y2="52" stroke-width="1.6" />
-          <!-- trolley running on the jib -->
+        </g>
+        <!-- carriage: trolley + cable + hook roll in together, the hook lowers,
+             then swings.  Nested groups keep the roll/drop/swing transforms
+             from clobbering one another. -->
+        <g class="hd-hoist__carriage" stroke="var(--amber)" stroke-linecap="round" stroke-linejoin="round">
+          <!-- trolley (rolls along the jib with the hook) -->
           <rect x="502" y="95" width="42" height="13" rx="2" stroke-width="2.2" />
           <circle cx="512" cy="95" r="3" stroke-width="1.6" />
           <circle cx="534" cy="95" r="3" stroke-width="1.6" />
-        </g>
-        <g class="hd-hoist__line" stroke="var(--amber)" stroke-linecap="round">
-          <line x1="523" y1="108" x2="523" y2="426" stroke-width="2.5" />
-          <circle cx="523" cy="433" r="7" stroke-width="2.5" />
-          <path d="M523 440 v11 a9.5 9.5 0 1 1 -9.5 9.5" stroke-width="2.5" />
+          <g class="hd-hoist__swing">
+            <line class="hd-hoist__cable" x1="523" y1="108" x2="523" y2="426" stroke-width="2.5" />
+            <g class="hd-hoist__hook">
+              <circle cx="523" cy="433" r="7" stroke-width="2.5" />
+              <path d="M523 440 v11 a9.5 9.5 0 1 1 -9.5 9.5" stroke-width="2.5" />
+            </g>
+          </g>
         </g>
       </svg>
       <div class="hd-hero-anno">Pineville, NC<br />34.197&deg;N &middot; 80.886&deg;W<br /><span class="amber">EST. 1958</span></div>
