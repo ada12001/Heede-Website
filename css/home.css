@@ -154,7 +154,7 @@ select:focus-visible, textarea:focus-visible {
    are pulled up into place (timed to start as the hook reaches them). */
 .hd-rig {
   position: relative; margin: 0; max-width: max-content;
-  transform-origin: top center; animation: hdRig .85s var(--ease-out) 2.3s both;
+  transform-origin: top center; animation: hdRig .85s var(--ease-out) 2.5s both;
 }
 .hd-rig .hd-eyebrow { display: inline-flex; margin: 0 0 18px; }
 @keyframes hdRig {
