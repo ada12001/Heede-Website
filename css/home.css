@@ -154,7 +154,7 @@ select:focus-visible, textarea:focus-visible {
    are pulled up into place (timed to start as the hook reaches them). */
 .hd-rig {
   position: relative; margin: 0; max-width: max-content;
-  transform-origin: top center; animation: hdRig 1.1s var(--ease-out) 1.35s both;
+  transform-origin: top center; animation: hdRig .9s var(--ease-out) 1.95s both;
 }
 .hd-rig .hd-eyebrow { display: inline-flex; margin: 0 0 18px; }
 @keyframes hdRig {
@@ -180,24 +180,28 @@ select:focus-visible, textarea:focus-visible {
 .hd-hoist__carriage { animation: hdRoll 1s var(--ease-out) .3s both; }
 .hd-hoist__cable {
   transform-box: view-box; transform-origin: 523px 108px;
-  animation: hdDrop .8s ease-in 1.2s both;
+  animation: hdDrop 1.4s ease-in-out 1.2s both;
 }
-.hd-hoist__hook { animation: hdDropHook .8s ease-in 1.2s both; }
+.hd-hoist__hook { animation: hdDropHook 1.4s ease-in-out 1.2s both; }
 .hd-hoist__swing {
   transform-box: view-box; transform-origin: 523px 104px;
-  animation: hdCableSwing 6s ease-in-out 2.4s infinite;
+  animation: hdCableSwing 6s ease-in-out 2.75s infinite;
 }
 @keyframes hdCraneIn { to { opacity: 1; } }
 @keyframes hdRoll {
   0%   { transform: translateX(-150px); }
   100% { transform: translateX(0); }
 }
-@keyframes hdDrop {           /* cable extends from the trolley downward */
-  0%   { transform: scaleY(.42); }
+/* cable extends down to the text (grab), then retracts up to rest, lifting it */
+@keyframes hdDrop {
+  0%   { transform: scaleY(.35); }
+  50%  { transform: scaleY(1.2); }
   100% { transform: scaleY(1); }
 }
-@keyframes hdDropHook {       /* hook rides the bottom of the cable */
-  0%   { transform: translateY(-184px); }
+/* hook rides the bottom of the cable (values kept proportional to the cable) */
+@keyframes hdDropHook {
+  0%   { transform: translateY(-207px); }
+  50%  { transform: translateY(64px); }
   100% { transform: translateY(0); }
 }
 @keyframes hdCableSwing {
