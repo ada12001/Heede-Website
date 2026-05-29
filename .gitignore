@@ -1,0 +1,9 @@
+# macOS
+.DS_Store
+
+# Raw source media not used by the site (too large for GitHub)
+assets/Videos from Heede/
+assets/Photo from Heede Team/
+
+# Local dev server config
+.claude/

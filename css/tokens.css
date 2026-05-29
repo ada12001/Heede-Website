@@ -1,0 +1,268 @@
+/* =============================================================================
+   HEEDE CRANES — Colors & Type Foundations
+   -----------------------------------------------------------------------------
+   Bold industrial system: steel-black + concrete neutrals, anchored by a single
+   high-vis safety amber. Engineered grotesque (Archivo) + technical mono
+   (IBM Plex Mono) for spec/label detailing.
+
+   Fonts are loaded from Google Fonts here for convenience. For production /
+   offline use, self-host the .woff2 files into /fonts and replace the @import.
+   ========================================================================== */
+
+@import url('https://fonts.googleapis.com/css2?family=Archivo:ital,wght@0,400..900;1,400..900&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap');
+
+:root {
+  /* ---------------------------------------------------------------------------
+     BASE PALETTE — Heede brand (authoritative)
+     ------------------------------------------------------------------------ */
+
+  /* Core brand */
+  --navy:    #09163A;   /* Deep Navy — primary brand: headers, dark sections, buttons */
+  --navy-2:  #0C1D4D;   /* lighter navy — elevated dark surfaces */
+  --steel:   #354A85;   /* Steel Blue — secondary: labels, accents, hover */
+  --steel-2: #4A609F;   /* lighter steel */
+  --amber:   #F2B705;   /* Safety Amber — accent ONLY: active states, technical ticks */
+  --amber-press: #D49E00;
+  --ink:     #0A0E1A;   /* near-black — body text, footer */
+  --white:   #FFFFFF;   /* primary surface */
+
+  /* Construction gray scale */
+  --gray-50:  #F5F6F8;
+  --gray-100: #ECEEF2;
+  --gray-200: #DDE1E8;
+  --gray-300: #C3C9D4;
+  --gray-500: #7E8696;
+  --gray-700: #444B5A;
+
+  /* Functional signals (used sparingly) */
+  --signal-go:   #2E9E5B;   /* in-service / available */
+  --signal-warn: #E0911E;   /* reserved */
+  --signal-stop: #C5402F;   /* down / alert */
+
+  /* Legacy aliases — map older component refs onto the brand system */
+  --ink-900: var(--ink);
+  --ink-800: var(--navy);
+  --ink-700: var(--navy-2);
+  --ink-600: #1E2C52;       /* hairline on navy */
+  --ink-500: var(--steel);
+  --steel-600: var(--gray-700);
+  --steel-500: var(--gray-500);
+  --steel-400: #9AA2B1;
+  --steel-300: var(--gray-300);
+  --steel-200: var(--gray-200);
+  --steel-100: var(--gray-100);
+  --concrete-50:  var(--gray-50);
+  --concrete-100: var(--gray-50);
+  --concrete-200: var(--gray-100);
+  --concrete-300: var(--gray-200);
+  --amber-500: var(--amber);
+  --amber-600: #E0A800;
+  --amber-700: var(--amber-press);
+  --amber-300: #FBE08A;
+
+  /* ---------------------------------------------------------------------------
+     SEMANTIC TOKENS — reference these in components
+     ------------------------------------------------------------------------ */
+
+  /* Surfaces */
+  --bg:            var(--gray-50);
+  --bg-elevated:   var(--white);
+  --bg-sunken:     var(--gray-100);
+  --bg-dark:       var(--navy);     /* dark sections, headers */
+  --bg-dark-elev:  var(--navy-2);
+  --bg-darkest:    var(--ink);      /* footer */
+
+  /* Foreground / text */
+  --fg:            var(--ink);
+  --fg-muted:      var(--gray-700);
+  --fg-subtle:     var(--gray-500);
+  --fg-on-dark:        var(--white);
+  --fg-on-dark-muted:  #AEB6C8;
+  --fg-on-dark-subtle: #7E8696;
+
+  /* Accent — primary actions are NAVY; amber is a sparing tick */
+  --accent:        var(--navy);
+  --accent-hover:  var(--steel);
+  --accent-press:  #060F2A;
+  --accent-ink:    var(--white);    /* text/icons sitting ON navy */
+  --link:          var(--steel);
+  --tick:          var(--amber);    /* technical ticks, eyebrow bars, active states */
+
+  /* Borders & lines */
+  --border:        var(--gray-200);
+  --border-strong: var(--gray-300);
+  --border-on-dark:  rgba(255,255,255,0.14);
+  --hairline:      var(--gray-100);
+
+  /* Focus ring */
+  --focus-ring:    var(--steel);
+
+  /* ---------------------------------------------------------------------------
+     TYPOGRAPHY
+     ------------------------------------------------------------------------ */
+  --font-display: 'Archivo', 'Arial Narrow', system-ui, sans-serif;
+  --font-sans:    'Archivo', system-ui, -apple-system, sans-serif;
+  --font-mono:    'IBM Plex Mono', ui-monospace, 'SFMono-Regular', monospace;
+
+  /* Weights */
+  --w-regular: 400;
+  --w-medium: 500;
+  --w-semibold: 600;
+  --w-bold: 700;
+  --w-extrabold: 800;
+  --w-black: 900;
+
+  /* Fluid type scale (web). Display uses expanded width + tight leading. */
+  --t-display:  clamp(3.25rem, 7.5vw, 7.5rem);  /* hero monuments */
+  --t-h1:       clamp(2.5rem, 5vw, 4.5rem);
+  --t-h2:       clamp(1.875rem, 3.4vw, 3rem);
+  --t-h3:       clamp(1.375rem, 2vw, 1.875rem);
+  --t-h4:       1.25rem;
+  --t-body-lg:  1.1875rem;
+  --t-body:     1.0625rem;
+  --t-small:    0.9375rem;
+  --t-eyebrow:  0.75rem;   /* mono uppercase label */
+  --t-micro:    0.6875rem;
+
+  /* Line heights */
+  --lh-tight: 0.94;
+  --lh-snug: 1.08;
+  --lh-heading: 1.15;
+  --lh-body: 1.6;
+
+  /* Tracking */
+  --ls-display: -0.02em;
+  --ls-heading: -0.01em;
+  --ls-eyebrow: 0.18em;   /* wide-tracked mono labels */
+  --ls-mono: 0.02em;
+
+  /* ---------------------------------------------------------------------------
+     SPACING — 4px base
+     ------------------------------------------------------------------------ */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-7: 48px;
+  --space-8: 64px;
+  --space-9: 96px;
+  --space-10: 128px;
+  --space-11: 192px;
+
+  /* Layout */
+  --container: 1320px;
+  --container-wide: 1560px;
+  --gutter: clamp(20px, 4vw, 64px);
+
+  /* ---------------------------------------------------------------------------
+     RADII — industrial = mostly square. Small radii only.
+     ------------------------------------------------------------------------ */
+  --r-none: 0px;
+  --r-sm: 2px;
+  --r: 3px;
+  --r-md: 5px;
+  --r-lg: 8px;
+  --r-pill: 999px;
+
+  /* ---------------------------------------------------------------------------
+     SHADOWS — crisp & restrained. Prefer borders to soft blur.
+     ------------------------------------------------------------------------ */
+  --shadow-sm: 0 1px 2px rgba(11,12,14,0.08);
+  --shadow:    0 2px 8px rgba(11,12,14,0.10), 0 1px 2px rgba(11,12,14,0.06);
+  --shadow-lg: 0 12px 32px rgba(11,12,14,0.16);
+  --shadow-amber: 0 4px 16px rgba(255,196,0,0.30);
+
+  /* Motion */
+  --ease-out: cubic-bezier(0.2, 0.7, 0.2, 1);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --dur-fast: 120ms;
+  --dur: 220ms;
+  --dur-slow: 420ms;
+}
+
+/* =============================================================================
+   SEMANTIC ELEMENT STYLES — opt in by adding the .heede-type class to a root
+   ========================================================================== */
+.heede-type {
+  font-family: var(--font-sans);
+  color: var(--fg);
+  font-size: var(--t-body);
+  line-height: var(--lh-body);
+  font-weight: var(--w-regular);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+.heede-type h1, .heede-display {
+  font-family: var(--font-display);
+  font-weight: var(--w-extrabold);
+  font-stretch: 125%;            /* expanded — monumental */
+  font-size: var(--t-display);
+  line-height: var(--lh-tight);
+  letter-spacing: var(--ls-display);
+  text-transform: uppercase;
+  margin: 0;
+}
+
+.heede-type h2 {
+  font-family: var(--font-display);
+  font-weight: var(--w-bold);
+  font-stretch: 112%;
+  font-size: var(--t-h2);
+  line-height: var(--lh-heading);
+  letter-spacing: var(--ls-heading);
+  margin: 0 0 var(--space-4);
+}
+
+.heede-type h3 {
+  font-family: var(--font-sans);
+  font-weight: var(--w-bold);
+  font-size: var(--t-h3);
+  line-height: var(--lh-snug);
+  letter-spacing: var(--ls-heading);
+  margin: 0 0 var(--space-3);
+}
+
+.heede-type h4 {
+  font-family: var(--font-sans);
+  font-weight: var(--w-semibold);
+  font-size: var(--t-h4);
+  line-height: var(--lh-heading);
+  margin: 0 0 var(--space-2);
+}
+
+.heede-type p {
+  margin: 0 0 var(--space-4);
+  max-width: 68ch;
+  text-wrap: pretty;
+}
+
+.heede-type a { color: inherit; text-underline-offset: 3px; }
+
+/* Eyebrow / kicker — the engineered mono label that recurs across the brand */
+.heede-eyebrow {
+  font-family: var(--font-mono);
+  font-weight: var(--w-medium);
+  font-size: var(--t-eyebrow);
+  letter-spacing: var(--ls-eyebrow);
+  text-transform: uppercase;
+  color: var(--fg-muted);
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+.heede-eyebrow::before {
+  content: "";
+  width: 24px; height: 2px;
+  background: var(--tick);
+  display: inline-block;
+}
+
+/* Technical data / spec numbers */
+.heede-mono {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: var(--ls-mono);
+}
