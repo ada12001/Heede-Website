@@ -153,11 +153,12 @@ select:focus-visible, textarea:focus-visible {
 /* Hero headline hoist: on load the crane hook + the headline rise into place
    together, then the hook releases and fades — "the sky is our limit." lifted. */
 .hd-rig {
-  position: relative; margin: 24px 0 0; max-width: max-content;
+  position: relative; margin: 0; max-width: max-content;
   transform-origin: top center; animation: hdRig 1.15s var(--ease-out) .35s both;
 }
+.hd-rig .hd-eyebrow { display: inline-flex; margin: 0 0 18px; }
 .hd-rigging {
-  position: absolute; right: -2%; left: auto; top: -82px; height: 82px; width: 34px;
+  position: absolute; left: 8%; right: auto; top: -82px; height: 82px; width: 34px;
   pointer-events: none; overflow: visible; animation: hdRigFade .55s ease 1.95s forwards;
 }
 @keyframes hdRig {
