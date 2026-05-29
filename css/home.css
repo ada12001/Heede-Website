@@ -150,47 +150,27 @@ select:focus-visible, textarea:focus-visible {
   position: absolute; inset: 0; opacity: .5;
   background-image: repeating-linear-gradient(90deg, transparent 0 119px, rgba(255,255,255,.05) 119px 120px);
 }
-/* Hero headline hoist: the hook + the title rise into place together on load,
-   as if the crane lifts "The sky is our limit." up. */
-.hd-hero__titlewrap { position: relative; margin-top: 24px; }
-.hd-hero__rig {
-  position: absolute; inset: 0; pointer-events: none; z-index: 2;
-  animation: hd-hoist 1s cubic-bezier(.16, 1, .3, 1) .15s both;
+/* Hero headline hoist: on load the crane hook + the headline rise into place
+   together, then the hook releases and fades — "the sky is our limit." lifted. */
+.hd-rig {
+  position: relative; margin: 24px 0 0; max-width: max-content;
+  transform-origin: top center; animation: hdRig 1.15s var(--ease-out) .35s both;
 }
-.hd-hero__cable {
-  position: absolute; left: 22px; bottom: calc(100% + 2px); width: 2px; height: 92vh;
-  background: linear-gradient(180deg, rgba(255,255,255,0) 0%, rgba(255,255,255,.5) 22%, rgba(255,255,255,.62) 100%);
+.hd-rigging {
+  position: absolute; right: -2%; left: auto; top: -82px; height: 82px; width: 34px;
+  pointer-events: none; overflow: visible; animation: hdRigFade .55s ease 1.95s forwards;
 }
-.hd-hero__hook {
-  position: absolute; left: -7px; bottom: calc(100% - 34px); width: 60px; height: 86px;
-  transform-origin: 50% 0; animation: hd-hook-sway 6s ease-in-out 1.5s infinite;
-  filter: drop-shadow(0 8px 16px rgba(0,0,0,.5));
+@keyframes hdRig {
+  0%   { transform: translateY(118px); opacity: 0; }
+  30%  { opacity: 1; }
+  80%  { transform: translateY(-7px); opacity: 1; }
+  100% { transform: translateY(0); opacity: 1; }
 }
-@keyframes hd-hoist {
-  0% { transform: translateY(116px); }
-  100% { transform: translateY(0); }
-}
-@keyframes hd-hook-sway {
-  0%, 100% { transform: rotate(-2deg); }
-  50% { transform: rotate(2deg); }
-}
-.hd-hero__line { display: block; overflow: hidden; padding-bottom: .1em; margin-bottom: -.1em; }
-.hd-hero__line-i {
-  display: block; transform: translateY(112%);
-  animation: hd-line-rise 1s cubic-bezier(.16, 1, .3, 1) both;
-}
-.hd-hero__line:nth-child(1) .hd-hero__line-i { animation-delay: .2s; }
-.hd-hero__line:nth-child(2) .hd-hero__line-i { animation-delay: .32s; }
-@keyframes hd-line-rise {
-  0% { transform: translateY(112%); }
-  100% { transform: translateY(0); }
-}
+@keyframes hdRigFade { to { opacity: 0; transform: translateY(-12px); } }
 @media (prefers-reduced-motion: reduce) {
-  .hd-hero__rig, .hd-hero__hook, .hd-hero__line-i { animation: none; }
-  .hd-hero__rig { transform: none; }
-  .hd-hero__line-i { transform: none; }
+  .hd-rig { animation: none; }
+  .hd-rigging { display: none; }
 }
-@media (max-width: 760px) { .hd-hero__rig { display: none; } }
 .hd-hero-anno {
   position: absolute; top: 108px; right: var(--gutter); text-align: right;
   font-family: var(--font-mono); font-size: 11px; letter-spacing: .12em; text-transform: uppercase;
@@ -201,7 +181,7 @@ select:focus-visible, textarea:focus-visible {
 .hd-hero__title {
   font-family: var(--font-display); font-weight: 800; font-stretch: 125%; text-transform: uppercase;
   font-size: var(--t-display); line-height: var(--lh-tight); letter-spacing: var(--ls-display);
-  color: var(--fg-on-dark); margin: 0; max-width: 15ch;
+  color: var(--fg-on-dark); margin: 0; max-width: 15ch; white-space: nowrap;
 }
 .hd-hero__title .amber { color: var(--amber); }
 .hd-hero__sub {
